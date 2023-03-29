@@ -1,0 +1,85 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: A sample template
+Resources:
+  INFYVPC:
+      Type: AWS::EC2::VPC
+      Properties:
+        CidrBlock: 10.0.0.0/16
+        EnableDnsSupport: 'true'
+        EnableDnsHostnames: 'true'
+        Tags:
+          - Key: Name
+            Value: INFY-VPC
+  INFYInternetGateway:
+      Type: AWS::EC2::InternetGateway
+      Properties:
+        Tags:
+          - Key: Name
+            Value: INFYIGW
+  INFYAttachGateway:
+      Type: AWS::EC2::VPCGatewayAttachment
+      Properties:
+        VpcId:
+          Ref: INFYVPC
+        InternetGatewayId:
+          Ref: INFYInternetGateway
+  INFYPUBSubnet:
+      Type: AWS::EC2::Subnet
+      Properties:
+        VpcId:
+          Ref: INFYVPC
+        CidrBlock: 10.0.0.0/24
+        AvailabilityZone: "us-east-1a"
+        MapPublicIpOnLaunch: "true"
+        Tags:
+        - Key: Name
+          Value: INFY-PUB-SUB
+  INFYPVTSubnet:
+      Type: AWS::EC2::Subnet
+      Properties:
+        VpcId:
+          Ref: INFYVPC
+        CidrBlock: 10.0.1.0/24
+        AvailabilityZone: "us-east-1b"
+        Tags:
+        - Key: Name
+          Value: INFY-PVT-SUB
+  INFYPUBRouteTable:
+      Type: AWS::EC2::RouteTable
+      Properties:
+        VpcId:  
+          Ref: INFYVPC
+        Tags:
+        - Key: Name
+          Value: INFY-PUB-RT
+  INFYPVTRouteTable:
+      Type: AWS::EC2::RouteTable
+      Properties:
+        VpcId:  
+          Ref: INFYVPC
+        Tags:
+        - Key: Name
+          Value: INFY-PVT-RT
+  INFYPUBSubnetRouteTableAssociation:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        SubnetId:
+          Ref: INFYPUBSubnet
+        RouteTableId:
+          Ref: INFYPUBRouteTable
+  INFYPVTSubnetRouteTableAssociation:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        SubnetId:
+          Ref: INFYPVTSubnet
+        RouteTableId:
+          Ref: INFYPVTRouteTable
+  INFYRoute:
+      Type: AWS::EC2::Route
+      DependsOn: INFYAttachGateway
+      Properties:
+         RouteTableId:
+            Ref: INFYPUBRouteTable
+         DestinationCidrBlock: 0.0.0.0/0
+         GatewayId:
+            Ref: INFYInternetGateway
